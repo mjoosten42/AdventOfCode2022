@@ -19,12 +19,9 @@ fn main() {
 	
 	for line in contents.split("\n\n").last().unwrap().lines() {
 		let instr: Vec<usize> = line.split_whitespace().filter_map(|word|	word.parse().ok()).collect();
-		let mut tmp: VecDeque<char> = VecDeque::new();
 		for _ in 0..instr[0] {
-			tmp.push_front(cont[instr[1] as usize - 1].pop_front().unwrap());
-		}
-		for _ in 0..instr[0] {
-			cont[instr[2] as usize - 1].push_front(tmp.pop_front().unwrap());
+			let c = cont[instr[1] as usize - 1].pop_front().unwrap();
+			cont[instr[2] as usize - 1].push_front(c);
 		}
 	}
 
