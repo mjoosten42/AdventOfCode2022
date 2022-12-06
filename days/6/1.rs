@@ -2,7 +2,7 @@ use std::collections::{HashSet, VecDeque};
 
 fn main() {
 	let contents = std::fs::read_to_string(&std::env::args().collect::<Vec<String>>()[1]).unwrap();
-	let size = 14;
+	let size = 4;
 	let mut last: VecDeque<u8> = Default::default();
 
 	for i in 0..contents.len() {
