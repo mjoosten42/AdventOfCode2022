@@ -23,15 +23,18 @@ fn main() {
 			"dir" => { paths.insert(cur.join(words[1]), 0); }
 			_ => {
 				cur.ancestors().for_each(|path| {
-					paths.entry(path.to_path_buf()).and_modify(|size| {
-						*size += words[0].parse::<u32>().unwrap();
-					}); 
+					paths.entry(path.to_path_buf()).and_modify(|size| *size += words[0].parse::<u32>().unwrap()); 
 				});
 			}
 		}
 	}
 
-	let missing = 30000000 - (70000000 - paths.get(&PathBuf::from("/")).unwrap());
-	println!("{}", paths.iter().filter(|path| *path.1 >= missing).min_by(|x, y| x.1.cmp(y.1)).unwrap().1);
+	println!("{}", paths.iter().fold(0, |sum, path| {
+		if *path.1 < 100000 {
+			sum + path.1
+		} else {
+			sum
+		}
+	}));
 
 }
