@@ -4,7 +4,8 @@ struct Tile {
 	x: usize,
 	y: usize,
 	height: u8,
-	reached: bool
+	reached: bool,
+	end: bool,
 }
 
 fn main() {
@@ -20,15 +21,24 @@ fn main() {
 				b'S' => b'a', 
 				b'E' => b'z',
 				_ => c.1,
-			}, reached: c.1 == b'E' };
+			}, reached: c.1 == b'S', end: c.1 == b'E'};
 			grid.last_mut().unwrap().push(new);
-			if c.1 == b'E' { edges.push(new); }
+			if c.1 == b'S' { edges.push(new); }
 		}
 	}
 
 	let mut steps = 0;
 	let mut add: Vec<Tile> = Vec::new();
 	'outer: loop {
+
+		println!("{steps}");
+		for line in &grid {
+			for tile in line {
+				print!("{}", if tile.reached { '#' } else { '.' });
+			}
+			println!("");
+		}
+
 		steps += 1;
 		for tile in &edges {
 			let mut neighbors: Vec<Tile> = Vec::new();
@@ -38,8 +48,8 @@ fn main() {
 			if tile.y + 1 < grid.len() { neighbors.push(grid[tile.y + 1][tile.x]); }
 
 			for edge in &mut neighbors {
-				if !edge.reached && edge.height + 1 >= tile.height {
-					if edge.height == b'a' { break 'outer; }
+				if !edge.reached && edge.height <= tile.height + 1 {
+					if edge.end { break 'outer; }
 					grid[edge.y][edge.x].reached = true;
 					add.push(grid[edge.y][edge.x]);
 				}
@@ -47,9 +57,11 @@ fn main() {
 		}
 		
 		edges = add.clone();
-		add.clear();
 	}
 
 
 	println!("{steps}");
+
+
+
 }
