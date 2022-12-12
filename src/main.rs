@@ -1,55 +1,89 @@
-#[derive(Debug)]
-#[derive(Clone, Copy)]
-struct Tile {
-	x: usize,
-	y: usize,
-	height: u8,
-	reached: bool
+struct Monkey {
+	items: Vec<u32>,
+	op: Box<dyn FnMut(&mut u32)>,
+	throw: Box<dyn Fn(u32) -> usize>,
+	inspected: u32,
+	div: u32,
+}
+
+impl Monkey {
+	fn new() -> Self {
+		Monkey { items: Vec::new(), op: Box::new(|_| ()), throw: Box::new(|_| 0), inspected: 0, div: 0 }
+	}
+}
+
+impl std::fmt::Display for Monkey {
+	fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+		write!(f, "{:?}", self.items)
+	}
 }
 
 fn main() {
 	let contents = std::fs::read_to_string(&std::env::args().collect::<Vec<String>>()[1]).unwrap();
+	let mut monkeys: Vec<Monkey> = Vec::new();
 
-	let mut grid: Vec<Vec<Tile>> = Vec::new();
-	let mut edges: Vec<Tile> = Vec::new();
-	
-	for line in contents.lines().enumerate() {
-		grid.push(Vec::new());
-		for c in line.1.bytes().enumerate() {
-			let new = Tile { x: c.0, y: line.0, height: match c.1 {
-				b'S' => b'a', 
-				b'E' => b'z',
-				_ => c.1,
-			}, reached: c.1 == b'E' };
-			grid.last_mut().unwrap().push(new);
-			if c.1 == b'E' { edges.push(new); }
-		}
-	}
-
-	let mut steps = 0;
-	let mut add: Vec<Tile> = Vec::new();
-	'outer: loop {
-		steps += 1;
-		for tile in &edges {
-			let mut neighbors: Vec<Tile> = Vec::new();
-			if tile.x >= 1 { neighbors.push(grid[tile.y][tile.x - 1]); }
-			if tile.x + 1 < grid.first().unwrap().len() { neighbors.push(grid[tile.y][tile.x + 1]); }
-			if tile.y >= 1 { neighbors.push(grid[tile.y - 1][tile.x]); }
-			if tile.y + 1 < grid.len() { neighbors.push(grid[tile.y + 1][tile.x]); }
-
-			for edge in &mut neighbors {
-				if !edge.reached && edge.height + 1 >= tile.height {
-					if edge.height == b'a' { break 'outer; }
-					grid[edge.y][edge.x].reached = true;
-					add.push(grid[edge.y][edge.x]);
+	let mut test = (0, 0, 0);
+	for line in contents.lines() {
+		if line.is_empty() { continue; }
+		let words: Vec<&str> = line.split_whitespace().collect();
+		match words[0] {
+			"Monkey" => monkeys.push(Monkey::new()),
+			"Starting" => {
+				words.iter().skip(2).for_each(|item| {
+					monkeys.last_mut().unwrap().items.push(item.trim_end_matches(",").parse::<u32>().unwrap())
+				});
+			}
+			"Operation:" => {
+				let mut cur = monkeys.last_mut().unwrap();
+				if words[5] == "old" {
+					cur.op = Box::new(|item: &mut u32| *item *= *item);
+				} else {
+					let n = words[5].parse::<u32>().unwrap();
+					if words[4] == "+" {
+						cur.op = Box::new(move |item| *item += n);
+					} else {
+						cur.op = Box::new(move |item| *item *= n);
+					}
 				}
 			}
+			"Test:" => monkeys.last_mut().unwrap().div = words[3].parse::<u32>().unwrap(),
+			"If" => { 
+				match words[1] {
+					"true:" => test.1 = words[5].parse::<usize>().unwrap(),
+					"false:" => {
+						test.0 = monkeys.last().unwrap().div;
+						test.2 = words[5].parse::<usize>().unwrap();
+						monkeys.last_mut().unwrap().throw = Box::new(move |item| {
+							if item % test.0 == 0 { test.1 } else { test.2 }
+						});
+					}
+					_ => (),
+				}
+			}
+			_ => (),
 		}
-		
-		edges = add.clone();
-		add.clear();
 	}
 
+	let mut tmp: Vec<Vec<u32>> = (0..monkeys.len()).map(|_| Vec::new()).collect();
 
-	println!("{steps}");
+	const ROUNDS: u32 = 20;
+	for _ in 0..ROUNDS {
+		for entry in monkeys.iter_mut().enumerate() {
+			let monkey = entry.1;
+			monkey.items.append(&mut tmp[entry.0]);
+			monkey.inspected += monkey.items.len() as u32;
+			for item in &mut monkey.items {
+				*item %= monkey.div;
+				(monkey.op)(item);
+				let index = (monkey.throw)(*item);
+				tmp[index].push(*item);
+			}
+			monkey.items.clear();
+		}
+	}
+
+	for monkey in &mut monkeys.iter_mut().enumerate() {
+		monkey.1.items.append(&mut tmp[monkey.0]);
+		println!("{:?}", monkey.1.inspected);
+	}
 }
