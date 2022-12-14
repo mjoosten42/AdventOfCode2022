@@ -43,11 +43,14 @@ fn main() {
 		rocks.push(re.split(line).filter(|s| !s.is_empty()).map(|point| Point::from(point)).collect());
 	}
 
+	let max_x = rocks.iter().map(|line| line.iter().map(|point| point.x).max().unwrap()).max().unwrap();
+	let min_x = rocks.iter().map(|line| line.iter().map(|point| point.x).min().unwrap()).min().unwrap();
 	let max_y = rocks.iter().map(|line| line.iter().map(|point| point.y).max().unwrap()).max().unwrap();
 
-	rocks.push(vec![Point { x: 0, y: max_y + 2}, Point { x: 990, y: max_y + 2 } ]);
-	let width = 1000;
-	let height = (max_y + 3) as usize;
+	rocks.iter_mut().for_each(|line| line.iter_mut().for_each(|point| point.x -= min_x - 1));
+
+	let width = (max_x - min_x + 3) as usize;
+	let height = (max_y + 1) as usize;
 	let mut grid: Vec<Vec<char>> = vec![vec!['.'; width]; height];
 
 	for line in &mut rocks {
@@ -64,10 +67,11 @@ fn main() {
 		}
 	}
 
-	const START: usize = 500;
-	while grid[0][START] == '.' {
-		let mut sand = Point { x: START as i32, y: 0 };
-		loop {
+	let start = 500 - (min_x - 1);
+	while grid[0][start as usize] == '.' {
+
+		let mut sand = Point { x: start, y: 0 };
+		while sand.y + 1 < height as i32 {
 			let next = [
 				Point { x: sand.x + 0, y: sand.y + 1},
 				Point { x: sand.x - 1, y: sand.y + 1},
@@ -78,6 +82,7 @@ fn main() {
 				None => break,
 			}
 		}
+		if sand.y + 1 == height as i32 { break ; }
 		grid[sand.y as usize][sand.x as usize] = 'o';
 	}
 
