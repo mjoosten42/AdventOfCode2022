@@ -1,4 +1,3 @@
-use regex::Regex;
 use std::ops::{AddAssign, Sub};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -38,9 +37,8 @@ fn main() {
 	let contents = std::fs::read_to_string(&std::env::args().collect::<Vec<String>>()[1]).unwrap();
 	let mut rocks: Vec<Vec<Point>> = Vec::new();
 
-	let re = Regex::new(r"[ \->]").unwrap();
 	for line in contents.lines() {
-		rocks.push(re.split(line).filter(|s| !s.is_empty()).map(|point| Point::from(point)).collect());
+		rocks.push(line.split(" -> ").filter(|s| !s.is_empty()).map(|point| Point::from(point)).collect());
 	}
 
 	let max_x = rocks.iter().map(|line| line.iter().map(|point| point.x).max().unwrap()).max().unwrap();
