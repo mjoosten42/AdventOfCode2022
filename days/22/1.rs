@@ -1,12 +1,6 @@
 use std::collections::HashMap;
 
-use glam::{IVec2, Vec2};
-
-#[derive(Clone, Debug)]
-struct Face {
-	start: IVec2,
-	edges: HashMap<IVec2, IVec2>,
-}
+use glam::IVec2;
 
 fn main() {
 	let args: Vec<String> = std::env::args().collect();
@@ -19,60 +13,6 @@ fn main() {
 			if tile == b'.' || tile == b'#' {
 				tiles.insert(IVec2::new(x as i32, y as i32), tile == b'.');
 			}
-		}
-	}
-
-	let size = f32::sqrt((tiles.len() / 6) as f32) as usize;
-	
-	let mut faces: Vec<Face> = Vec::new();
-	for y in (0..tiles.len()).step_by(size) {
-		for x in (0..tiles.len()).step_by(size) {
-			let tile = IVec2::new(x as i32, y as i32);
-			if tiles.contains_key(&tile) {
-				faces.push(Face { start: tile, edges: HashMap::new() });
-			}
-		}
-	}
-
-	let unit_vecs: Vec<IVec2> = [IVec2::AXES, IVec2::AXES.map(|v| -v)].concat().iter().map(|v| *v * size as i32).collect();
-
-	for face in &mut faces {
-		let adj: Vec<IVec2> = unit_vecs.clone().into_iter().map(|v| v + face.start).collect();
-
-		for tile in adj {
-			if tiles.contains_key(&tile) {
-				face.edges.insert((tile - face.start).signum(), tile);
-			}
-		}
-	}
-
-	let mut i = 0;
-
-	loop {
-		i += 1;
-		for a in &faces {
-			println!("{a:?}");
-		}
-		println!("");
-		
-		for face in faces.clone() {
-			if face.edges.len() == 2 {
-				let mut it = face.edges.iter();
-				let first = *it.next().unwrap().0;
-				let second = *it.next().unwrap().0;
-
-				if first.dot(second) == 0 {
-					let first_edge = face.edges.get(&first).unwrap();
-					let second_edge = face.edges.get(&second).unwrap();
-
-					faces.iter_mut().find(|f| f.start == *first_edge).unwrap().edges.insert(second, *second_edge);
-					faces.iter_mut().find(|f| f.start == *second_edge).unwrap().edges.insert(first, *first_edge);
-				}
-			}
-		}
-		
-		if i == 4 {
-			break ;
 		}
 	}
 
@@ -151,4 +91,8 @@ fn step(tiles: &HashMap<IVec2, bool>, mut pos: IVec2, dir: IVec2, amount: usize)
 	}
 
 	pos
+
+
+
+
 }
