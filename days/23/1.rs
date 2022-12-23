@@ -2,6 +2,8 @@ use std::collections::{HashSet, HashMap, VecDeque};
 
 use glam::IVec2;
 
+const ROUNDS: usize = 10;
+
 fn main() {
 	let args: Vec<String> = std::env::args().collect();
 	let contents = std::fs::read_to_string(&args[1]).unwrap();
@@ -22,10 +24,7 @@ fn main() {
 		vec![IVec2::new(1, 0), IVec2::new(1, -1), IVec2::new(1, 1)],
 	].into();
 
-	let mut round = 0;
-	loop {
-		round += 1;
-
+	for _ in 0..ROUNDS {
 		let mut moves: HashMap<IVec2, (usize, IVec2)> = HashMap::new();
 	
 		for elf in elves.clone() {
@@ -49,10 +48,6 @@ fn main() {
 
 		moves.retain(|_, (amount, _)| *amount == 1);
 
-		if moves.is_empty() {
-			break ;
-		}
-	
 		for (to, (_, elf)) in moves {
 			elves.remove(&elf);
 			elves.insert(to);
@@ -62,7 +57,19 @@ fn main() {
 
 	}
 
-	println!("{round}");
+	let mut total = 0;
+	let min = min(&elves);
+	let max = max(&elves);
+
+	for y in (min.y)..(max.y + 1) {
+		for x in (min.x)..(max.x + 1) {
+			if !elves.contains(&IVec2::new(x, y)) {
+				total += 1;
+			}
+		}
+	}
+	
+	println!("{total}");
 
 }
 
