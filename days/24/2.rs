@@ -32,6 +32,8 @@ fn main() {
 	let mut minutes = 0;
 
 	minutes += go(&mut tiles, start, end);
+	minutes += go(&mut tiles, end, start);
+	minutes += go(&mut tiles, start, end);
 
 	println!("{minutes}");
 	
